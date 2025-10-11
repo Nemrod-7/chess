@@ -13,11 +13,9 @@ namespace move {
     const int x[64] = {0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7};
     const int y[64] = {0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,7};
 
-
-    //                                                [         diagonal        ]  [         cross         ]
-    const std::vector<std::pair<int,int>> complete = {{-1,-1},{1,-1},{1,1},{-1,1}, {0,-1},{1,0},{0,1},{-1,0}};
     const std::vector<std::pair<int,int>> compass = {{0,-1},{1,0},{0,1},{-1,0}};
     const std::vector<std::pair<int,int>> diagonal = {{-1,-1},{1,-1},{1,1},{-1,1}};
+    const std::vector<std::pair<int,int>> complete = {{0,-1},{1,0},{0,1},{-1,0},{-1,-1},{1,-1},{1,1},{-1,1}};
     const std::vector<std::pair<int,int>> knight_m = { {-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,2},{2,-1},{2,1} };
     const std::vector<std::vector<std::pair<int,int>>> pawn_move = { {{0,1}},{{0,-1}} };
     const std::vector<std::vector<std::pair<int,int>>> pawn_attack = { {{-1,1},{1,1}},{{-1,-1},{1,-1}} };
@@ -116,10 +114,8 @@ class Board {
 };
 class Display {
     private :
-        // inline static std::map<int, std::string> utblack = { {pawn, "♙"}, {rook, "♖"}, {bishop, "♗"}, {knight, "♘"}, {queen, "♕"}, {king, "♔"} };
-        // inline static std::map<int, std::string> utwhite = { {pawn, "♟"}, {rook, "♜"}, {bishop, "♝"}, {knight, "♞"}, {queen, "♛"}, {king, "♚"} };
-        inline static const std::vector<std::string> utblack = {"♙","♗","♘","♖","♕","♔"};
-        inline static const std::vector<std::string> utwhite = {"♟","♝","♞","♜","♛","♚"};
+        inline static const std::string utblack[6] = {"♙","♗","♘","♖","♕","♔"};
+        inline static const std::string utwhite[6] = {"♟","♝","♞","♜","♛","♚"};
 
     public :
         static void board (const Board &board) {
@@ -134,14 +130,42 @@ class Display {
                 } else if (opp >= 0) {
                     std::cout << utblack[opp];
                 } else {
-                    std::cout <<((x + y) % 2 ? "." : " ") ;
+                    std::cout << ".";
                 }
 
                 std::cout << " ";
                 if (x == 7) std::cout << "\n";
             }
         }
+        static void large (Board &board) {
+            const std::string cadran = "     A   B   C   D   E   F   G   H  \n";
+            const std::string header = "   ╔═══╤═══╤═══╤═══╤═══╤═══╤═══╤═══╗\n";
+            const std::string middle = "   ╟───┼───┼───┼───┼───┼───┼───┼───╢\n";
+            const std::string footer = "   ╚═══╧═══╧═══╧═══╧═══╧═══╧═══╧═══╝\n";
 
+            std::cout << "\n\n\n";
+            std::cout << cadran;
+            std::cout << header;
+
+            for (int i = 0; i < 8; i++) {
+                std::cout << " " << 8 - i << " ║";
+                for (int j = 0; j < 8; j++) {
+                    const bool pat = (i+j) % 2;
+                    const int pla = board.player_id(white, i * 8 + j), opp = board.player_id(black, i * 8 + j);
+
+                    if (pla >= 0) {
+                        std::cout << " " << utwhite[pla] << " ";
+                    } else if (opp >= 0) {
+                        std::cout << " " << utblack[opp] << " ";
+                    } else {
+                        std::cout << ( pat == 0 ? "   " : "░░░");
+                    }
+                    std::cout << (j == 7 ? "║" : "│");
+                }
+                std::cout << "\n";
+                std::cout << (i == 7 ? footer : middle);
+            }
+        }
         static void limited (const Board &board) {
             std::cout << "\n";
             char disblack[6] = {'p','b','n','r','q','k'};
@@ -159,7 +183,7 @@ class Display {
                 } else if (opp >= 0) {
                     std::cout << disblack[opp];
                 } else {
-                    std::cout << "." ;
+                    std::cout << ".";
                 }
 
                 std::cout << " ";
@@ -167,7 +191,6 @@ class Display {
             }
 
         }
-
         static std::string identify (int type) {
 
             switch (type) {
@@ -304,18 +327,21 @@ void Board::place (const std::string &txt) {
 }
 void Board::create () {
     bitboard = {{
-        0xff00,
-        0x0081,
-        0x0042,
-        0x0024,
-        0x0010,
-        0x0008 }, {
-        0x00ff000000000000,
-        0x8100000000000000,
-        0x4200000000000000,
-        0x2400000000000000,
-        0x1000000000000000,
-        0x0800000000000000 }};
+        0xff00, // pawn
+        0x0042, // bishop
+        0x0024, // knight
+        0x0081, // rook
+        0x0010, // queen
+        0x0008, // king
+
+     }, {
+        0x00ff000000000000, // pawn
+        0x4200000000000000, // bishop
+        0x2400000000000000, // knight
+        0x8100000000000000, // rook
+        0x1000000000000000, // queen
+        0x0800000000000000, // king
+       }};
 }
 const int Board::count () {
 
