@@ -5,6 +5,43 @@ using namespace std;
 
 enum {opening, middlegame, endgame};
 
+bool threat (Board &board, int x, int y) {
+
+    u64 fzone = 0;
+
+    for (int i = 0; i < 6; i++) {
+        fzone |= (board[white][i] | board[black][i]);
+    }
+
+
+    for (int k = 0; k < 8; k++) {
+        int nx = x + move::knight_m[k].first, ny = y + move::knight_m[k].second;
+        int nxt = move::index(nx,ny);
+
+        if (board.is_inside(nx,ny) && bit::chk(board[black][knight], nxt)) return true;
+
+        for (int dist = 1; dist <= 8; dist++) {
+            nx = x + move::complete[k].first * dist, ny = y + move::complete[k].second * dist;
+            nxt = move::index(nx,ny);
+
+            if (board.is_inside(nx,ny) && bit::chk(fzone, nxt)) {
+                if (k < 2 && dist < 2 && bit::chk(board[black][pawn], nxt)) return true;
+                // cout << char(nx - 1 + 'A') << " " << ny << "\n";
+
+                if (k > 3) {
+                    if (bit::chk(board[black][queen], nxt) || bit::chk(board[black][rook], nxt)) return true;
+                } else {
+                    if (bit::chk(board[black][queen], nxt) || bit::chk(board[black][bishop], nxt)) return true;
+                }
+
+                break;
+            }
+        }
+    }
+
+    return false;
+}
+
 u64 threat_zone (Board &board, int side) {
     const int opp = side ^ 1;
     u64 player = 0, enemy = 0, fzone = 0;
@@ -80,34 +117,6 @@ vector<vertex> get_moves (Board &board, int side) {
 
     return hist;
 }
-bool threat (Board &board, int x, int y) {
-
-    for (int k = 0; k < 8; k++) {
-        int nx = x + move::knight_m[k].first, ny = y + move::knight_m[k].second;
-        int nxt = move::index(nx,ny);
-
-        if (board.is_inside(nx,ny) && bit::chk(board[black][knight], nxt)) return true;
-
-        for (int dist = 1; dist <= 8; dist++) {
-            nx = x + move::complete[k].first * dist, ny = y + move::complete[k].second * dist;
-            nxt = move::index(nx,ny);
-
-            if (board.is_inside(nx,ny)/* && board[nxt] != ' ' */) {
-                if (k < 2 && dist < 2 && bit::chk(board[black][pawn], nxt)) return true;
-
-                if (k > 3) { 
-                    if (bit::chk(board[black][queen], nxt) || bit::chk(board[black][rook], nxt)) return true;
-                } else {
-                    if (bit::chk(board[black][queen], nxt) || bit::chk(board[black][bishop], nxt)) return true;
-                }
-
-                break;
-            }
-        }
-    }
-
-    return false;
-}
 
 int main() {
 
@@ -119,70 +128,77 @@ int main() {
     // The threefold position or 50-move rule applies: the test fails.
 
     Board board;
+
     int game = opening;
+    int cycle = 0, fifty = 0;
+    int hash[64] = {0};
     int history[64][6] = {0};
 
+    auto [piece1, ix1] = notation("Ka8");
+    board[black][piece1] |= 1UL << ix1;
 
-    auto [piece1, idx] = notation("Ke8");
-    board[black][piece1] |= 1UL << idx;
+    // auto [piece2, ix2] = notation("Qd5");
+    // board[black][piece2] |= 1UL << ix2;
 
-    board.place("Qe7");
-    board.place("Ke6");
+    board.place("Kh5");
+    board.place("Qb6");
 
 
-    if (board[white][queen] == 0) {
+    if (!board[white][queen] || !board[black][queen]) {
         game = endgame;
     }
 
-
-    const int kg = bit::pos(board[black][king])[0];
-    const int kx = move::x[kg], ky = move::y[kg];
-
-    const u64 fzone = threat_zone(board, black);
-    int free = 0, place = 0;
-
-    if (bit::chk(fzone, kg)) cout << "check\n";
-
-    // for (auto &[dx,dy] : move::complete) {
-    //     int nx = dx + kx, ny = dy + ky;
-    //     int next = move::index(nx,ny);
-    //
-    //     if (board.is_inside(nx, ny)) {
-    //
-    //         if (!bit::chk(fzone, next)) {
-    //             free++;
-    //             place = next;
-    //         }
-    //     }
-    // }
-
-
-    vector<vertex> moves = get_moves(board, white);
-    //
-    // for (auto [piece, curr, next] : moves) {
-    //
-    //     if (next == kg) {
-    //         cout << "check\n";
-    //     }
-    //     // cout << Display::identify(piece) ;
-    //     // cout << "[" << move::x[curr] << " " << move::y[curr]  << "]";
-    //     // cout << "[" << move::x[next] << " " << move::y[next]  << "]";
-    //     // cout << "\n";
-    // }
-    //
-    for (int curr = 0; curr < 64; curr++) {
-        if (curr > 0 && curr % 8 == 0) cout << "\n";
-
-        if (bit::chk(fzone, curr)) {
-            cout << "x ";
-        } else {
-            cout << ". ";
-        }
+    switch (game) {
+      case opening : std::cout << "opening"; break;
+      case endgame : std::cout << "endgame"; break;
+      case middlegame : std::cout << "middlegame"; break;
     }
-    // history[next][piece]++;
 
+    std::cout << "\n";
+    Display::limited(board);
+    std::cout << "move : " << cycle ;
+
+    // const int bk = bit::pos(board[black][king])[0];
+    // const int bx = move::x[bk], by = move::y[bk];
+    // const u64 fzone = threat_zone(board, black);
+    //
+    // const int kg = bit::pos(board[white][king])[0];
+    // const int kx = move::x[kg], ky = move::y[kg];
+    //
+    // vector<vertex> moves = get_moves(board, white);
+    //
+    // cout << "threat : " << threat(board, bx, by);
+    //
     // cout << "\n";
-    // Display::limited(board);
+    // for (int curr = 0; curr < 64; curr++) {
+    //     if (curr > 0 && curr % 8 == 0) cout << "\n";
+    //
+    //     if (bit::chk(fzone, curr)) {
+    //         cout << "x ";
+    //     } else {
+    //         cout << ". ";
+    //     }
+    // }
+    // cout << "\n";
+
+    // for (auto [piece, curr, next] : moves) {
+    //     board[white][piece] ^= 1UL << curr;
+    //     board[white][piece] ^= 1UL << next;
+    //
+    //     cout << Display::identify(piece) ;
+    //     cout << "[" << (char) (move::x[curr] + 'A') << " " << (8 - move::y[curr])  << "]";
+    //     cout << "[" << (char) (move::x[next] + 'A') << " " << (8 - move::y[next]) << "]";
+    //
+    //     cout << threat(board, kx, ky);
+    //     cout << "\n";
+    //
+    //
+    //     board[white][piece] ^= 1UL << curr;
+    //     board[white][piece] ^= 1UL << next;
+    // }
+
+
+    cout << "\n";
 
     cout << "\nexit\n";
 }

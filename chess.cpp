@@ -43,11 +43,11 @@ void change (Board &board, const vertex &node, int enemy) {
 
 u64 threat (Board &board, int side) {
     const int opp = side ^ 1;
-    u64 player = 0, enemy = 0, threat = 0;
-
-    for (int i = 0; i < 6; i++) {
-        player |= board[side][i], enemy |= board[opp][i];
-    }
+    u64 threat = 0;
+    u64 player = board[white][pawn] | board[white][bishop] | board[white][knight] |
+                 board[white][rook] | board[white][queen]  | board[white][king];
+    u64 enemy = board[black][pawn]  | board[black][bishop] | board[black][knight] |
+                board[black][rook]  | board[black][queen]  | board[black][king];
 
     for (int curr = 0; curr < 64; curr++) {
         if (bit::chk(enemy, curr)) {
@@ -78,12 +78,11 @@ u64 threat (Board &board, int side) {
 }
 vector<vertex> get_moves3 (Board &board, int side) {
     const int opp = side ^ 1;
-    u64 player = 0, enemy = 0;
     vector<vertex> hist;
-
-    for (int i = 0; i < 6; i++) {
-        enemy |= board[opp][i], player |= board[side][i];
-    }
+    u64 player = board[white][pawn] | board[white][bishop] | board[white][knight] |
+                 board[white][rook] | board[white][queen]  | board[white][king];
+    u64 enemy = board[black][pawn]  | board[black][bishop] | board[black][knight] |
+                board[black][rook]  | board[black][queen]  | board[black][king];
 
     for (int curr = 0; curr < 64; curr++) {
         if (bit::chk(player, curr)) {
