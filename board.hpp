@@ -1,9 +1,8 @@
 #pragma once
 
-// enum {black, white};
-// enum {pawn, bishop, knight, rook, queen, king};
-
-struct vertex { int type, now, nxt; };
+#include "general.hpp"
+#include "bitop.hpp"
+#include "moves.hpp"
 
 inline static bool is_inside (int x, int y) { return x >= 0 && y >= 0 && x < 8 && y < 8; }
 
@@ -22,7 +21,6 @@ class Board {
         const bool is_inside(int, int);
         const int count ();
 };
-
 
 class Display {
     private :
@@ -119,38 +117,6 @@ class Display {
         }
 };
 
-
-///////////////////////////////general.cpp////////////////////////////////////
-// std::pair<int,int> notation (const std::string &txt) { // chess notation to (type, index) => ex : kb6 -> (5,38)
-//     const char id = txt[0];
-//     const int x = txt[1] - 97, y = 7 - (txt[2] - 49);
-//     // printf("%c %i %i\n", id, x, y);
-//     switch (id) {
-//       case 'P' : return {pawn, move::index(x,y)}; break;
-//       case 'R' : return {rook, move::index(x,y)}; break;
-//       case 'K' : return {king, move::index(x,y)}; break;
-//       case 'Q' : return {queen, move::index(x,y)}; break;
-//       case 'B' : return {bishop, move::index(x,y)}; break;
-//       case 'N' : return {knight, move::index(x,y)}; break;
-//     }
-//
-//     return {-1, 64};
-// }
-// int score (int type) {
-//
-//     switch (type) {
-//         case pawn   : return 1 ; break;
-//         case bishop : return 3; break;
-//         case knight : return 3;break;
-//         case rook   : return 5; break;
-//         case queen  : return 8; break;
-//         case king   : return 99; break;
-//     }
-//
-//     return 0;
-// }
-///////////////////////////////board.cpp/////////////////////////////////////
-
 const int Board::player_id(int color, int pos) const {
   for (int j = 0; j < 6; j++) {
       if (bit::chk(bitboard[color][j], pos)) return j;
@@ -194,5 +160,4 @@ const int Board::count () {
 
     return total;
 }
-
 ////////////////////////////////////////////////////////////////////////////////

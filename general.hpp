@@ -1,8 +1,15 @@
 #pragma once
 
+#include <string>
+#include <vector>
+#include "moves.hpp"
+#include "bitop.hpp"
+
 enum {black, white};
 enum {opening, middlegame, endgame};
 enum {pawn, bishop, knight, rook, queen, king};
+
+struct vertex { int type, now, nxt; };
 
 const std::vector<std::vector<int>> heuristic {
     { // pawn
@@ -51,7 +58,7 @@ const std::vector<std::vector<int>> heuristic {
         -10,  0,  5,  0,  0,  0,  0,-10,
         -20,-10,-10, -5, -5,-10,-10,-20
     },
-    //     { // king
+    //     { // king opening
     // -30,-40,-40,-50,-50,-40,-40,-30,
     // -30,-40,-40,-50,-50,-40,-40,-30,
     // -30,-40,-40,-50,-50,-40,-40,-30,
@@ -62,7 +69,7 @@ const std::vector<std::vector<int>> heuristic {
     //  20, 30, 10,  0,  0, 10, 30, 20
     //     },
     {
-        // king end game
+        // king endgame
         -50,-40,-30,-20,-20,-30,-40,-50,
         -30,-20,-10,  0,  0,-10,-20,-30,
         -30,-10, 20, 30, 30, 20,-10,-30,
