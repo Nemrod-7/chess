@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 using u8 = unsigned short int;
 using u64 = unsigned long long int;
 
@@ -84,3 +86,4 @@ namespace bit {
       return x;
     }
 };
+

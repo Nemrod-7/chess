@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include "moves.hpp"
-#include "bitop.hpp"
+#include "bitmanip.hpp"
 
 enum {black, white};
 enum {opening, middlegame, endgame};

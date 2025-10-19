@@ -211,7 +211,7 @@ int negamax (Board &board, int depth) {
 
     return maxv;
 }
-int minimax2 (Board &board, int depth, int alpha, int beta, int mode) {
+int minimax2 (Board &board, int depth, int alpha, int beta, bool mode) {
 
     if (depth == 0 || board[black][king] == 0) {
         return board.count();

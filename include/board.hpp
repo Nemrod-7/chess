@@ -1,7 +1,7 @@
 #pragma once
 
 #include "general.hpp"
-#include "bitop.hpp"
+#include "bitmanip.hpp"
 #include "moves.hpp"
 
 inline static bool is_inside (int x, int y) { return x >= 0 && y >= 0 && x < 8 && y < 8; }

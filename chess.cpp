@@ -1,79 +1,11 @@
 #include <iostream>
 #include <vector>
 
-#include "board.hpp"
-#include "moves.hpp"
-#include "general.hpp"
-#include "bitop.hpp"
+#include "include/board.hpp"
+#include "include/moves.hpp"
+#include "include/general.hpp"
+#include "include/bitmanip.hpp"
 
-#include <chrono>
-#include <sstream>
-
-class Timer {
-    //using time = chrono::steady_clock;
-    private :
-        std::chrono::steady_clock::time_point alpha, end;
-        std::chrono::duration<double> elapsed;
-        uint64_t cycle;
-
-        void update () {
-            end = std::chrono::steady_clock::now ();
-            elapsed = end - alpha;
-        }
-    public :
-        Timer() {
-            alpha = std::chrono::steady_clock::now ();
-            cycle = 0;
-        }
-        void start () { alpha = std::chrono::steady_clock::now ();}
-        void stop () { update();}
-        void get_duration () {
-
-            double duration = elapsed.count();
-            const std::vector<std::pair<int,std::string>> base {{31536000,"year"},{86400,"day"}, {3600,"hour"},{60,"mn"}, {1,"s"}};
-            int count = 0;
-            std::vector<int> period;
-            std::ostringstream os;
-
-            for (auto it : base) {
-                period.push_back (duration / it.first);
-
-                if (period.back() != 0)
-                    count++;
-
-                duration -= (period.back() * it.first);
-            }
-            for (int i = 0; i < 5; ++i) {
-                if (period[i] != 0) {
-                    count--;
-                    os << period[i] << " " << base[i].second;
-                    // if (period[i] > 1) os << "s";
-                    if (count > 1) os << ", ";
-                    if (count == 1) os << " ";
-                }
-            }
-            if (duration > 0.0) os << " " << int(duration * 60 * 1e3) / 1e3 << " ms";
-
-            std::cout << "\nDuration " << os.str() << std::endl;
-        }
-        bool running (double total) {
-
-            update();
-            cycle++;
-            if (elapsed.count() < total) return true;
-            std::cout << "cycles :: " ;
-
-            std::string num = std::to_string (cycle);
-            int size = num.size(), index = 0;
-
-            while (size-->0) {
-                std::cout << num[index++];
-                if (size % 3 == 0) std::cout << ' ';
-            }
-            std::cout << std::endl;
-            return false;
-        }
-};
 
 using namespace std;
 
@@ -231,12 +163,12 @@ vector<vertex> get_moves4 (Board &board, u8 side) {
         }
         bmask ^= (bmask & player);
 
-        // display( bmask );
+        display( bmask );
         for (auto &next : bit::pos(bmask)) {
             if (bit::chk(fzone, next)) {
-              // cout << Display::identify(piece) ;
-              // cout << "[" << move::x[curr] << " " << move::y[curr]  << "]";
-              //  cout << to_notation(piece, next) << "\n";
+                // cout << Display::identify(piece) ;
+                // cout << "[" << move::x[curr] << " " << move::y[curr]  << "]";
+                // cout << to_notation(piece, next) << "\n";
             } else {
                 vs.push_back( { piece, curr, next } );
             }
@@ -252,7 +184,7 @@ vector<vertex> get_moves4 (Board &board, u8 side) {
     return vs;
 }
 
-int minimax2 (Board &board, int depth, int alpha, int beta, int mode) {
+int minimax2 (Board &board, int depth, int alpha, int beta, bool mode) {
 
     if (depth == 0 || board[black][king] == 0) {
         return board.count();
@@ -268,10 +200,10 @@ int minimax2 (Board &board, int depth, int alpha, int beta, int mode) {
 
         if (mode == true) {
             maxv = max(maxv, minimax2(board, depth - 1, alpha, beta, false));
-            alpha = max(alpha, maxv);
+            alpha = max(maxv, alpha);
         } else {
             minv = min(minv, minimax2(board, depth - 1, alpha, beta, true));
-            beta = min(beta, minv);
+            beta = min(minv, beta);
         }
 
         change_pos(board, node, enemy);
@@ -350,13 +282,12 @@ string play (Board &board, const string &txt) {
 }
 
 int main () {
-  // black cannot make a valid move. There are three possibilities:
-  //     Checkmate after at most 16 white moves: the test succeeds.
-  //     Checkmate after more than 16 white moves: the test fails. Note that the test is not interrupted after 16 white moves so at least you can see how many moves it took.
-  //     Stalemate: the test fails.
-  //
-  // The threefold position or 50-move rule applies: the test fails.
-    Timer tt;
+    // black cannot make a valid move. There are three possibilities:
+    //     Checkmate after at most 16 white moves: the test succeeds.
+    //     Checkmate after more than 16 white moves: the test fails. Note that the test is not interrupted after 16 white moves so at least you can see how many moves it took.
+    //     Stalemate: the test fails.
+    //
+    // The threefold position or 50-move rule applies: the test fails.
 
     Board board;
     int game = opening;
@@ -372,7 +303,8 @@ int main () {
         game = endgame;
     }
 
-    white_move(board);
+    const vector<vertex> vs = get_moves4(board, white);
+    // white_move(board);
 
     Display::limited(board);
     // const u8 kgp = bit::pos(board[black][king])[0];
@@ -388,7 +320,5 @@ int main () {
     // std::cout << "move : " << cycle  << " ";
     // cout << to_notation(king, kgp) << " ";
 
-    tt.stop();
-    tt.get_duration();
     cout << "\nend\n";
 }

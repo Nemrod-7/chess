@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "bitop.hpp"
+#include "bitmanip.hpp"
 
 /*
 enum {E,SE,S,SW, W,NW,N,NE};
